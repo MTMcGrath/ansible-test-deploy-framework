@@ -1,0 +1,21 @@
+---
+- hosts: all
+  connection:  docker
+
+  roles:
+    - ansible-nginx 
+
+  post_tasks:
+    - name: docker commit
+      command: docker inspect "{{ inventory_hostname }}" 
+      register: containerids
+      delegate_to: 127.0.0.1 
+
+    - name:
+      set_fact:
+        docker_tag: "{{ (containerids.stdout | from_json)| map(attribute='Config.Image') | join }}"
+
+    - name: 
+      command: docker tag {{ docker_tag }} {{ docker_tag }}-success 
+      delegate_to: 127.0.0.1
+
